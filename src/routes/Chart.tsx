@@ -3,6 +3,8 @@ import { useOutletContext } from "react-router-dom";
 import { fetchCoinHistory } from "../api";
 import ApexCharts from "react-apexcharts";
 import { transform } from "typescript";
+import { useRecoilValue } from "recoil";
+import { isDarkAtom } from "../atom";
 
 interface ChartProps {
   coinId: string;
@@ -20,12 +22,15 @@ interface IHistorical {
 }
 
 const Chart = () => {
-  const coinId = useOutletContext<ChartProps>();
+  const { coinId } = useOutletContext<ChartProps>();
   const { isLoading, data } = useQuery<IHistorical[]>(
     ["ohlcv", coinId],
     () => fetchCoinHistory(`${coinId}`),
     { refetchInterval: 10000 }
   );
+
+  // recoil
+  const isDark = useRecoilValue(isDarkAtom);
 
   // 우리가 보고자 하는 암호화폐가 무엇인지 알아야된다.
   return (
@@ -39,7 +44,7 @@ const Chart = () => {
             { name: "price", data: data?.map((price) => price.close) ?? [] },
           ]}
           options={{
-            theme: { mode: "dark" },
+            theme: { mode: isDark ? "dark" : "light" },
             chart: {
               height: 300,
               width: 500,

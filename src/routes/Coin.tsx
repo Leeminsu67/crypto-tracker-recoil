@@ -1,10 +1,17 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "react-query";
-import { Link, useMatch } from "react-router-dom";
+import {
+  Link,
+  useMatch,
+  useNavigate,
+  useOutletContext,
+} from "react-router-dom";
 import { Outlet, useLocation, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { fetchCoinInfo, fetchCoinTickers } from "../api";
 import { Helmet } from "react-helmet";
+import { useSetRecoilState } from "recoil";
+import { isDarkAtom } from "../atom";
 
 interface RouteParams {
   coinId: string | undefined;
@@ -82,6 +89,7 @@ const Header = styled.header`
   display: flex;
   justify-content: center;
   align-items: center;
+  position: relative;
 `;
 
 const Overview = styled.div`
@@ -90,6 +98,13 @@ const Overview = styled.div`
   background-color: rgba(0, 0, 0, 0.5);
   padding: 10px 20px;
   border-radius: 10px;
+`;
+
+const MoveBack = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 0;
+  cursor: pointer;
 `;
 
 const OverviewItem = styled.div`
@@ -147,6 +162,7 @@ const Coin = () => {
   const { state } = useLocation() as unknown as RouteState;
   const priceMatch = useMatch("/:coinId/price");
   const chartMatch = useMatch("/:coinId/chart");
+  const navigate = useNavigate();
 
   const { isLoading: infoLoading, data: infoData } = useQuery<IInfoData>(
     ["info", coinId],
@@ -158,28 +174,12 @@ const Coin = () => {
     { refetchInterval: 5000 }
   );
 
-  // 주석처리된 부분을 react query로 변환
-  // const [loading, setLoading] = useState(true);
-  // const [info, setInfo] = useState<IInfoData>();
-  // const [priceInfo, setPriceInfo] = useState<IPriceData>();
-  // // 이미 코인의 name을 가지고 있으니까 코인 타이틀의 name을 API가 줄 때까지 기다릴 필요가 없이 바로 UI에 표시가 가능하다
+  const backMoveOnClickHandler = () => {
+    navigate("/");
+  };
 
-  // useEffect(() => {
-  //   (async () => {
-  //     // 1. coin에 대한 정보
-  //     const infoData = await (
-  //       await fetch(`https://api.coinpaprika.com/v1/coins/${coinId}`)
-  //     ).json();
-  //     // 2. coin의 가격 정보
-  //     const priceData = await (
-  //       await fetch(`https://api.coinpaprika.com/v1/tickers/${coinId}`)
-  //     ).json();
-
-  //     setInfo(infoData);
-  //     setPriceInfo(priceData);
-  //     setLoading(false);
-  //   })();
-  // }, [coinId]);
+  const setDarkAtom = useSetRecoilState(isDarkAtom);
+  const toggleDarkAtom = () => setDarkAtom((prev) => !prev);
 
   // loading을 하나로 합쳐준다
   const loading = infoLoading || tickersLoading;
@@ -191,9 +191,11 @@ const Coin = () => {
         </title>
       </Helmet>
       <Header>
+        <MoveBack onClick={backMoveOnClickHandler}>&larr;</MoveBack>
         <Title>
           {state?.name ? state.name : loading ? "Loading..." : infoData?.name}
         </Title>
+        <button onClick={toggleDarkAtom}>Toggle Mode</button>
       </Header>
       {loading ? (
         <Loader>Loading...</Loader>
@@ -236,7 +238,7 @@ const Coin = () => {
           </Tabs>
 
           {/* Tab */}
-          <Outlet context={coinId} />
+          <Outlet context={{ coinId }} />
         </>
       )}
     </Container>

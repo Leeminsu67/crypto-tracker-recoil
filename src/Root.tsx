@@ -3,6 +3,8 @@ import { createGlobalStyle, ThemeProvider } from "styled-components";
 import { ReactQueryDevtools } from "react-query/devtools";
 import { darkTheme, lightTheme } from "./theme";
 import { useState } from "react";
+import { useRecoilValue } from "recoil";
+import { isDarkAtom } from "./atom";
 
 // 글로벌적으로 스타일을 적용시키고 싶다면
 // CSS 기본값들을 제거하는것
@@ -79,14 +81,11 @@ const GlobalStyle = createGlobalStyle`
 `;
 
 function Root() {
-  const [isDark, setIsDark] = useState(false);
-  const toggleDark = () => setIsDark((current) => !current);
+  const isDark = useRecoilValue(isDarkAtom);
 
   return (
     <>
-      {/* styled components 다크테마 설정 */}
       <ThemeProvider theme={isDark ? darkTheme : lightTheme}>
-        <button onClick={toggleDark}>Toggle Mode</button>
         <GlobalStyle />
         <Outlet />
         <ReactQueryDevtools initialIsOpen={true} />
